@@ -1,0 +1,47 @@
+From b7013c64674f37a831a1e7329ce4d7342a3feed4 Mon Sep 17 00:00:00 2001
+From: Jakub Sosnovec <jakub.sosnovec@nxp.com>
+Date: Mon, 16 Jan 2023 16:48:25 +0100
+Subject: [PATCH] Only SHM exchange, fix ShmThroughput demo
+
+---
+ examples/shm_throughput/shmpublisher.c | 7 ++++++-
+ src/core/ddsc/src/dds_write.c          | 5 ++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/examples/shm_throughput/shmpublisher.c b/examples/shm_throughput/shmpublisher.c
+index 93208aee..9dc21ca0 100644
+--- a/examples/shm_throughput/shmpublisher.c
++++ b/examples/shm_throughput/shmpublisher.c
+@@ -347,7 +347,12 @@ static void start_writing(
+         void *loaned_sample;
+ 
+         if ((status = dds_loan_sample(writer, &loaned_sample)) < 0)
+-          DDS_FATAL("dds_loan_sample: %s\n", dds_strretcode(-status));
++        {
++          /* Dont abort, this might just mean that iceoryx ran out of chunks in
++           * the shared memory pool */
++          printf("dds_loan_sample: %s\n", dds_strretcode(-status));
++          continue;
++        }
+         memcpy(loaned_sample, sample, payloadSize);
+         status = dds_write (writer, loaned_sample);
+         if (status == DDS_RETCODE_TIMEOUT)
+diff --git a/src/core/ddsc/src/dds_write.c b/src/core/ddsc/src/dds_write.c
+index 766a7742..2c114ef1 100644
+--- a/src/core/ddsc/src/dds_write.c
++++ b/src/core/ddsc/src/dds_write.c
+@@ -469,7 +469,10 @@ static dds_return_t dds_write_impl_iox (dds_writer *wr, struct ddsi_writer *ddsi
+   // The alternative is to block new fast path connections entirely (by holding
+   // the mutex) until data delivery is complete.
+   const bool use_only_iceoryx =
+-      no_network_readers &&
++      // Just completely ignore network readers, deliver all data via iceoryx
++      // only, if the QoS policy is suitable and all local readers are
++      // also using iceoryx.
++      //no_network_readers &&
+       ddsi_wr->xqos->durability.kind == DDS_DURABILITY_VOLATILE &&
+       num_fast_path_readers == 0;
+ 
+-- 
+2.25.1
+

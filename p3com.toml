@@ -1,0 +1,11 @@
+# This configuration file can be named /etc/iceoryx/p3com.toml
+
+# Possible values for the preferred-transport item are PCIE, TCP, UDP or NONE
+preferred-transport = "UDP"
+
+# Array of tables, each a service description of services to forward across transports
+# This example works with the iceoryx icehello demo:
+[[forwarded-service]]
+service = "Radar"
+instance = "FrontLeft"
+event = "Object"
