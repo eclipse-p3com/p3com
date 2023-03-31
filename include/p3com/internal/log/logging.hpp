@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/* Modifications by NXP 2022 */
+/* Modifications by NXP 2023 */
 
 #ifndef P3COM_LOGGING_HPP
 #define P3COM_LOGGING_HPP
