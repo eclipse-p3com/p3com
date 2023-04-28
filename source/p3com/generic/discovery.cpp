@@ -129,6 +129,18 @@ void iox::p3com::DiscoveryManager::waitsetLoop() noexcept
         {
             iox::cxx::Expects(notification->doesOriginateFrom(&m_portSubscriber));
             readPortSubscriber();
+
+            m_gwIntrospectionPublisher.loan()
+                .and_then([&](auto& sample) {
+                    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+                    sample->publisherUids = m_localState.userPublisherPorts;
+                    iox::p3com::pushUnique(sample->subscriberServices, m_localState.userSubscribers);
+                    sample.publish();
+                    iox::p3com::LogInfo() << "[NXPGateway] Published gw introspection";
+                })
+                .or_else([](auto& error) {
+                    iox::p3com::LogWarn() << "[NXPGateway] Unable to publish gateway introspection, error: " << error;
+                });
         }
     }
 }
@@ -227,10 +239,6 @@ void iox::p3com::DiscoveryManager::readPortSubscriber() noexcept
         sendDiscoveryInfo(info);
         m_lastSentDiscoveryInfo = info;
     }
-
-    m_gwIntrospectionPublisher.publishCopyOf(m_localState.userPublisherPorts).or_else([](auto& error) {
-        iox::p3com::LogWarn() << "[p3comGateway] Unable to publish gateway introspection, error: " << error;
-    });
 }
 
 void iox::p3com::DiscoveryManager::sendDiscoveryInfo(const iox::p3com::PubSubInfo_t& info) noexcept

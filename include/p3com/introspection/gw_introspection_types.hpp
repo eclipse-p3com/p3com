@@ -3,6 +3,7 @@
 #ifndef P3COM_GW_INTROSPECTION_TYPES_HPP
 #define P3COM_GW_INTROSPECTION_TYPES_HPP
 
+#include "iceoryx_posh/capro/service_description.hpp"
 #include "iceoryx_posh/roudi/introspection_types.hpp"
 #include "p3com/generic/config.hpp"
 
@@ -14,6 +15,13 @@ namespace p3com
  * @brief List of publisher IDs that are registered with the p3com gateway
  */
 using GwRegisteredPublisherPortData = cxx::vector<uint64_t, MAX_TOPICS>;
+using GwRegisteredSubscriberServicesData = cxx::vector<capro::ServiceDescription, MAX_TOPICS>;
+
+struct GwRegisteredData
+{
+    GwRegisteredPublisherPortData publisherUids;
+    GwRegisteredSubscriberServicesData subscriberServices;
+};
 
 const capro::ServiceDescription
     IntrospectionGwService(roudi::INTROSPECTION_SERVICE_ID, "RouDi_ID", "RegisteredPublishers");

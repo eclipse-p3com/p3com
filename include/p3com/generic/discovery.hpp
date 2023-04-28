@@ -90,7 +90,7 @@ class DiscoveryManager
 
     popo::Subscriber<roudi::PortIntrospectionFieldTopic> m_portSubscriber;
 
-    popo::Publisher<GwRegisteredPublisherPortData> m_gwIntrospectionPublisher;
+    popo::Publisher<GwRegisteredData> m_gwIntrospectionPublisher;
 
     RemoteState_t m_remoteState;
     LocalState_t m_localState;
