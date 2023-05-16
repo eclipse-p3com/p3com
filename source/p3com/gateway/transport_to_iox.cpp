@@ -78,7 +78,9 @@ void iox::p3com::Transport2Iceoryx::receive(const void* serializedUserPayload,
                             << publisher.getServiceDescription()
                             << ", submessage offset: " << datagramHeader.submessageOffset;
 
-        if (datagramHeader.submessageOffset == 0U)
+        const bool isPushed = m_segmentedMessageManager.findAndDecrement(
+            datagramHeader.messageHash, userHeader, userPayload, shouldPublish);
+        if (!isPushed)
         {
             const bool hasUserHeader = datagramHeader.userHeaderSize != 0U;
 
@@ -133,11 +135,6 @@ void iox::p3com::Transport2Iceoryx::receive(const void* serializedUserPayload,
                 shouldPublish = true;
             }
         }
-        else
-        {
-            shouldPublish =
-                m_segmentedMessageManager.findAndDecrement(datagramHeader.messageHash, userHeader, userPayload);
-        }
 
         if (userPayload != nullptr)
         {
@@ -166,7 +163,8 @@ void* iox::p3com::Transport2Iceoryx::loanBuffer(const void* serializedDatagramHe
         void* userPayload = nullptr;
         void* userHeader = nullptr;
 
-        if (datagramHeader.submessageOffset == 0U)
+        const bool isPushed = m_segmentedMessageManager.find(datagramHeader.messageHash, userHeader, userPayload);
+        if (!isPushed)
         {
             const bool hasUserHeader = datagramHeader.userHeaderSize != 0U;
 
@@ -214,10 +212,6 @@ void* iox::p3com::Transport2Iceoryx::loanBuffer(const void* serializedDatagramHe
                                            publisher,
                                            deadline);
         }
-        else
-        {
-            m_segmentedMessageManager.find(datagramHeader.messageHash, userHeader, userPayload);
-        }
 
         // Is this submessage filling the user header or the user payload?
         bufferPtr = (datagramHeader.submessageOffset < datagramHeader.userHeaderSize) ? userHeader : userPayload;
@@ -244,8 +238,9 @@ void iox::p3com::Transport2Iceoryx::releaseBuffer(const void* serializedDatagram
         {
             void* userHeader = nullptr;
             void* userPayload = nullptr;
-            const bool shouldPublish =
-                m_segmentedMessageManager.findAndDecrement(datagramHeader.messageHash, userHeader, userPayload);
+            bool shouldPublish = false;
+            m_segmentedMessageManager.findAndDecrement(
+                datagramHeader.messageHash, userHeader, userPayload, shouldPublish);
             if (shouldPublish)
             {
                 m_transportForwarder.push(userPayload, datagramHeader.serviceHash, deviceIndex);
