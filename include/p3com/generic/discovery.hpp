@@ -41,7 +41,7 @@ using DeviceIndexVector_t = cxx::vector<DeviceIndex_t, MAX_DEVICE_COUNT>;
 struct RemoteState_t
 {
     cxx::vector<DeviceRecord_t, MAX_DEVICE_COUNT> records;
-    cxx::vector_map<capro::ServiceDescription::ClassHash, DeviceIndexVector_t, MAX_DEVICE_COUNT> deviceIndicesCache;
+    cxx::vector_map<capro::ServiceDescription::ClassHash, DeviceIndexVector_t, MAX_TOPICS> deviceIndicesCache;
 };
 
 class DiscoveryManager

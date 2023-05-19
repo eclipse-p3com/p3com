@@ -31,8 +31,8 @@ class SegmentedMessageManager
               popo::UntypedPublisher& publisher,
               std::chrono::steady_clock::time_point deadline) noexcept;
 
-    void find(hash_t messageHash, void*& userHeader, void*& userPayload) noexcept;
-    bool findAndDecrement(hash_t messageHash, void*& userHeader, void*& userPayload) noexcept;
+    bool find(hash_t messageHash, void*& userHeader, void*& userPayload) noexcept;
+    bool findAndDecrement(hash_t messageHash, void*& userHeader, void*& userPayload, bool& shouldPublish) noexcept;
 
     void release(hash_t messageHash) noexcept;
     void releaseAll(popo::UntypedPublisher& publisher) noexcept;

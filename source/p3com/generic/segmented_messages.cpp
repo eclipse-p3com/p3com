@@ -57,8 +57,9 @@ void iox::p3com::SegmentedMessageManager::push(iox::p3com::hash_t messageHash,
 }
 
 bool iox::p3com::SegmentedMessageManager::findAndDecrement(iox::p3com::hash_t messageHash,
-                                                         void*& userHeader,
-                                                         void*& userPayload) noexcept
+                                                           void*& userHeader,
+                                                           void*& userPayload,
+                                                           bool& shouldPublish) noexcept
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     auto* msgIt = m_segmentedMessages.find(messageHash);
@@ -72,17 +73,21 @@ bool iox::p3com::SegmentedMessageManager::findAndDecrement(iox::p3com::hash_t me
         if (msg.remainingSegments == 0U)
         {
             m_segmentedMessages.erase(msgIt);
-            return true;
+            shouldPublish = true;
         }
         else
         {
-            return false;
+            shouldPublish = false;
         }
+        return true;
     }
-    return false;
+    else
+    {
+        return false;
+    }
 }
 
-void iox::p3com::SegmentedMessageManager::find(iox::p3com::hash_t messageHash,
+bool iox::p3com::SegmentedMessageManager::find(iox::p3com::hash_t messageHash,
                                              void*& userHeader,
                                              void*& userPayload) noexcept
 {
@@ -93,6 +98,11 @@ void iox::p3com::SegmentedMessageManager::find(iox::p3com::hash_t messageHash,
         auto& msg = *msgIt;
         userHeader = msg.userHeader;
         userPayload = msg.userPayload;
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 
